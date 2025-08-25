@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DebStocks Pro - AI Stock Price Prediction</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Plotly.js for interactive charts -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #00d4ff;
+            --secondary-color: #0099cc;
+            --accent-color: #00ff88;
+            --success-color: #00ff44;
+            --warning-color: #ffaa00;
+            --danger-color: #ff0066;
+            --dark-primary: #0a0f1c;
+            --dark-secondary: #1a2332;
+            --glass-bg: rgba(26, 35, 50, 0.15);
+            --glass-border: rgba(0, 212, 255, 0.2);
+            --neon-glow: 0 0 20px rgba(0, 212, 255, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: #b8c5d6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: url('https://cdn1.genspark.ai/user-upload-image/5_generated/86570cbe-32a5-4501-905f-8dc07ed7ff60') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(10, 15, 28, 0.9) 0%, 
+                rgba(26, 35, 50, 0.8) 50%, 
+                rgba(10, 15, 28, 0.9) 100%);
+            z-index: -1;
+        }
+
+        /* Floating particles animation */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        .particle:nth-child(1) { width: 4px; height: 4px; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 6px; height: 6px; left: 20%; animation-delay: 2s; }
+        .particle:nth-child(3) { width: 3px; height: 3px; left: 30%; animation-delay: 4s; }
+        .particle:nth-child(4) { width: 5px; height: 5px; left: 40%; animation-delay: 6s; }
+        .particle:nth-child(5) { width: 4px; height: 4px; left: 50%; animation-delay: 8s; }
+        .particle:nth-child(6) { width: 6px; height: 6px; left: 60%; animation-delay: 10s; }
+        .particle:nth-child(7) { width: 3px; height: 3px; left: 70%; animation-delay: 12s; }
+        .particle:nth-child(8) { width: 5px; height: 5px; left: 80%; animation-delay: 14s; }
+        .particle:nth-child(9) { width: 4px; height: 4px; left: 90%; animation-delay: 16s; }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .main-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            margin: 30px auto;
+            max-width: 1400px;
+            position: relative;
+            z-index: 10;
+            transform-style: preserve-3d;
+            animation: containerFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes containerFloat {
+            0%, 100% { transform: translateY(0px) rotateX(0deg); }
+            50% { transform: translateY(-10px) rotateX(1deg); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, 
+                rgba(0, 212, 255, 0.2) 0%, 
+                rgba(0, 153, 204, 0.2) 100%);
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 40px;
+            text-align: center;
+            border-radius: 30px 30px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5)); }
+            to { filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.8)); }
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            margin: 15px 0 0 0;
+            color: var(--text-secondary);
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+        }
+
+        .content-section {
+            padding: 40px;
+            position: relative;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            transform-style: preserve-3d;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-15px) rotateX(5deg);
+            box-shadow: 
+                0 25px 50px rgba(0, 212, 255, 0.2),
+                0 0 50px rgba(0, 212, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        .prediction-form h3 {
+            color: var(--text-primary);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .prediction-form h3 i {
+            color: var(--primary-color);
+            filter: drop-shadow(var(--neon-glow));
+        }
+
+        .form-control {
+            background: rgba(26, 35, 50, 0.3);
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .form-control:focus {
+            background: rgba(26, 35, 50, 0.5);
+            border-color: var(--primary-color);
+            box-shadow: 
+                0 0 0 0.25rem rgba(0, 212, 255, 0.25),
+                inset 0 0 20px rgba(0, 212, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-predict {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 35px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+            font-family: 'Orbitron', monospace;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-predict::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn-predict:hover::before {
+            left: 100%;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 15px 30px rgba(0, 212, 255, 0.4),
+                0 0 40px rgba(0, 212, 255, 0.3);
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+        }
+
+        .btn-predict:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-predict:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-container {
+            display: none;
+            animation: slideInUp 0.8s cubic-bezier(0.23, 1, 0.320, 1);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .prediction-card {
+            background: linear-gradient(135deg, 
+                rgba(0, 255, 68, 0.2) 0%, 
+                rgba(0, 212, 255, 0.2) 100%);
+            border: 2px solid var(--success-color);
+            color: var(--text-primary);
+            padding: 35px;
+            border-radius: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 20px 40px rgba(0, 255, 68, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .prediction-card.negative {
+            background: linear-gradient(135deg, 
+                rgba(255, 0, 102, 0.2) 0%, 
+                rgba(255, 170, 0, 0.2) 100%);
+            border-color: var(--danger-color);
+            box-shadow: 
+                0 20px 40px rgba(255, 0, 102, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .prediction-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .prediction-card h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .prediction-price {
+            font-family: 'Orbitron', monospace;
+            font-size: 4rem;
+            font-weight: 900;
+            margin: 20px 0;
+            text-shadow: 0 0 20px currentColor;
+            position: relative;
+            z-index: 2;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .prediction-change {
+            font-size: 1.5rem;
+            margin: 15px 0;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .metric-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(0, 212, 255, 0.05), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .metric-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-10px) rotateY(5deg);
+            box-shadow: 
+                0 20px 40px rgba(0, 212, 255, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .metric-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 15px 0;
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-container h4 {
+            color: var(--text-primary);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chart-container h4 i {
+            color: var(--primary-color);
+            filter: drop-shadow(var(--neon-glow));
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner-border {
+            width: 4rem;
+            height: 4rem;
+            border-width: 0.3em;
+            color: var(--primary-color);
+            filter: drop-shadow(var(--neon-glow));
+            animation: spin 1s linear infinite, glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-spinner p {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .alert {
+            background: rgba(255, 0, 102, 0.1);
+            border: 2px solid var(--danger-color);
+            border-radius: 15px;
+            color: var(--text-primary);
+            padding: 20px 25px;
+            margin: 25px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .disclaimer {
+            background: rgba(255, 170, 0, 0.1);
+            border: 2px solid var(--warning-color);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            color: var(--text-primary);
+            backdrop-filter: blur(10px);
+        }
+
+        .disclaimer h5 {
+            color: var(--warning-color);
+            margin-bottom: 15px;
+            font-family: 'Orbitron', monospace;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .info-section h4 {
+            color: var(--text-primary);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .info-section h4 i {
+            color: var(--primary-color);
+        }
+
+        .phase-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-right: 15px;
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .form-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 8px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .prediction-price {
+                font-size: 3rem;
+            }
+
+            .content-section {
+                padding: 25px;
+            }
+
+            .main-container {
+                margin: 15px;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+            }
+
+            .glass-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 25px 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1.1rem;
+            }
+
+            .content-section {
+                padding: 20px;
+            }
+
+            .prediction-price {
+                font-size: 2.5rem;
+            }
+
+            .metric-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header Section -->
+            <div class="header">
+                <h1><i class="fas fa-chart-line"></i> DebStocks - Predict Stock Price Online</h1>
+                <p>Advanced Neural Network Technology for Future Stock Price Prediction</p>
+            </div>
+
+            <!-- Main Content -->
+            <div class="content-section">
+                <!-- Prediction Form -->
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="glass-card prediction-form">
+                            <h3><i class="fas fa-search"></i> Enter Stock Ticker</h3>
+                            <p class="text-muted">Enter a stock symbol (e.g., AAPL, GOOGL, TSLA) to predict tomorrow's closing price</p>
+
+                            <form id="predictionForm">
+                                <div class="mb-3">
+                                    <label for="tickerInput" class="form-label">Stock Ticker Symbol</label>
+                                    <input type="text" class="form-control" id="tickerInput" 
+                                           placeholder="Enter ticker (e.g., AAPL)" 
+                                           pattern="[A-Za-z]{1,10}" 
+                                           title="Enter 1-10 letters only"
+                                           required>
+                                    <div class="form-text">Common tickers: AAPL, GOOGL, MSFT, TSLA, AMZN</div>
+                                </div>
+                                <button type="submit" class="btn btn-predict" id="predictBtn">
+                                    <i class="fas fa-magic"></i> Predict Future Price
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="glass-card info-section">
+                            <h4><i class="fas fa-info-circle"></i> How It Works</h4>
+                            <div class="mb-3">
+                                <span class="phase-badge" style="color: #f8f8f8ff;">Phase 1</span>
+                                <strong style="color: #faf8f8ff;">Enter The Ticker:</strong> Enter or Check the Ticker For the Stock Then Enter.
+                            </div>
+                            <div class="mb-3" style="color: #faf6f6ff;">
+                                <span class="phase-badge">Phase 2</span>
+                                <strong style="color: #fbf8f8ff;">Wait For Prediction</strong> Wait While The Model predictics.
+                            </div>
+                            <div class="mb-3" style="color: #f8f6f6ff;">
+                                <span class="phase-badge">Phase 3</span>
+                                <strong style="color: #fdfcfcff;">Evaluation:</strong> Model performance metrics (MSE, MAE, R²)
+                            </div>
+                            <div class="mb-3" style="color: #fcfbfbff;">
+                                <span class="phase-badge">Phase 4</span>
+                                <strong>Web Integration:</strong> Get / Read The Data Displayed Below.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Analyzing stock data and making prediction...</p>
+                </div>
+
+                <!-- Results Section -->
+                <div class="results-container" id="resultsContainer">
+                    <!-- Prediction Result -->
+                    <div class="prediction-card" id="predictionCard">
+                        <h3><i class="fas fa-target"></i> Prediction Result - Is Here :</h3>
+                        <div class="prediction-price" id="predictionPrice">$0.00</div>
+                        <div class="prediction-change" id="predictionChange">+$0.00 (0.00%)</div>
+                        <p><strong>Ticker:</strong> <span id="tickerSymbol">-</span> | 
+                           <strong>Date:</strong> <span id="predictionDate">-</span> | 
+                           <strong>Confidence:</strong> <span id="confidenceScore">-%</span></p>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-value" id="currentPrice">$0.00</div>
+                            <div class="metric-label">Current Price</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="mseValue">0.00</div>
+                            <div class="metric-label">MSE</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="maeValue">0.00</div>
+                            <div class="metric-label">MAE</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="r2Value">0.00</div>
+                            <div class="metric-label">R² Score</div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="chart-container">
+                        <h4><i class="fas fa-chart-area"></i> Price History & Prediction</h4>
+                        <div id="priceChart" style="width:100%;height:450px;"></div>
+                    </div>
+                </div>
+
+                <!-- Error Alert -->
+                <div class="alert alert-danger" id="errorAlert" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="errorMessage">An error occurred</span>
+                </div>
+
+                <!-- Disclaimer -->
+                <div class="disclaimer">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Important Disclaimer</h5>
+                    <p class="mb-0">
+                        <strong>This prediction is for educational and demonstration purposes only.</strong> 
+                        Stock market predictions are inherently uncertain and should not be used as financial advice. 
+                        Always consult with qualified financial advisors before making investment decisions. 
+                        Past performance does not guarantee future results.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // DOM elements
+        const form = document.getElementById('predictionForm');
+        const tickerInput = document.getElementById('tickerInput');
+        const predictBtn = document.getElementById('predictBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const errorAlert = document.getElementById('errorAlert');
+
+        // Form submission handler
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const ticker = tickerInput.value.trim().toUpperCase();
+            if (!ticker) {
+                showError('Please enter a valid stock ticker symbol');
+                return;
+            }
+
+            // Show loading state
+            showLoading();
+            hideError();
+            hideResults();
+
+            try {
+                // Make prediction request
+                const response = await fetch('/predict/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ticker: ticker })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Prediction failed');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        function showLoading() {
+            predictBtn.disabled = true;
+            predictBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Predicting...';
+            loadingSpinner.style.display = 'block';
+        }
+
+        function hideLoading() {
+            predictBtn.disabled = false;
+            predictBtn.innerHTML = '<i class="fas fa-magic"></i> Predict Price';
+            loadingSpinner.style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            errorAlert.style.display = 'block';
+            errorAlert.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideError() {
+            errorAlert.style.display = 'none';
+        }
+
+        function hideResults() {
+            resultsContainer.style.display = 'none';
+        }
+
+        function displayResults(data) {
+            // Update prediction card
+            const predictionCard = document.getElementById('predictionCard');
+            const isPositive = data.price_change >= 0;
+
+            predictionCard.className = `prediction-card ${isPositive ? '' : 'negative'}`;
+
+            document.getElementById('predictionPrice').textContent = `$${data.predicted_price}`;
+            document.getElementById('tickerSymbol').textContent = data.ticker;
+            document.getElementById('predictionDate').textContent = data.prediction_date;
+            document.getElementById('confidenceScore').textContent = `${(data.confidence * 100).toFixed(1)}%`;
+
+            // Update price change
+            const changePercent = ((data.price_change / data.current_price) * 100).toFixed(2);
+            const changeSymbol = isPositive ? '+' : '';
+            document.getElementById('predictionChange').textContent = 
+                `${changeSymbol}$${data.price_change} (${changeSymbol}${changePercent}%)`;
+
+            // Update metrics
+            document.getElementById('currentPrice').textContent = `$${data.current_price}`;
+            document.getElementById('mseValue').textContent = data.metrics.mse.toFixed(4);
+            document.getElementById('maeValue').textContent = data.metrics.mae.toFixed(4);
+            document.getElementById('r2Value').textContent = data.metrics.r2_score.toFixed(4);
+
+            // Create interactive chart
+            createPriceChart(data);
+
+            // Show results with animation
+            resultsContainer.style.display = 'block';
+            resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function createPriceChart(data) {
+            const dates = data.historical_data.dates;
+            const prices = data.historical_data.prices;
+
+            // Add prediction point
+            const predictionDate = data.prediction_date;
+            const predictionPrice = data.predicted_price;
+
+            // Historical price trace
+            const historicalTrace = {
+                x: dates,
+                y: prices,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Historical Prices',
+                line: {
+                    color: '#00d4ff',
+                    width: 3
+                },
+                marker: {
+                    size: 6,
+                    color: '#00d4ff'
+                }
+            };
+
+            // Prediction point trace
+            const predictionTrace = {
+                x: [dates[dates.length - 1], predictionDate],
+                y: [prices[prices.length - 1], predictionPrice],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Prediction',
+                line: {
+                    color: '#00ff88',
+                    width: 4,
+                    dash: 'dash'
+                },
+                marker: {
+                    size: 12,
+                    color: '#00ff88',
+                    symbol: 'star'
+                }
+            };
+
+            const layout = {
+                title: {
+                    text: `${data.ticker} Stock Price Prediction`,
+                    font: { size: 20, family: 'Orbitron', color: '#ffffff' }
+                },
+                xaxis: {
+                    title: 'Date',
+                    gridcolor: 'rgba(255, 255, 255, 0.1)',
+                    color: '#ffffff',
+                    tickfont: { color: '#ffffff' }
+                },
+                yaxis: {
+                    title: 'Price ($)',
+                    gridcolor: 'rgba(255, 255, 255, 0.1)',
+                    color: '#ffffff',
+                    tickfont: { color: '#ffffff' }
+                },
+                hovermode: 'x unified',
+                legend: {
+                    orientation: 'h',
+                    y: -0.2,
+                    font: { color: '#ffffff' }
+                },
+                margin: { t: 60, r: 50, b: 80, l: 80 },
+                plot_bgcolor: 'rgba(0, 0, 0, 0)',
+                paper_bgcolor: 'rgba(0, 0, 0, 0)'
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'autoScale2d']
+            };
+
+            Plotly.newPlot('priceChart', [historicalTrace, predictionTrace], layout, config);
+        }
+
+        // Auto-format ticker input
+        tickerInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+        });
+
+        // Add 3D tilt effect to cards
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('mousemove', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 10;
+                const rotateY = (centerX - x) / 10;
+                
+                this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+            });
+        });
+
+        // Add parallax effect to glass cards
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 15;
+                const rotateY = (centerX - x) / 15;
+                
+                this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-15px)`;
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+            });
+        });
+    </script>
+</body>
+</html>
