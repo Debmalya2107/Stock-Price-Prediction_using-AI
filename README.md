@@ -2,7 +2,8 @@
 
 A **full-stack Django web application** that predicts next-day stock prices using **LSTM neural networks** with real-time data integration and interactive visualizations.  
 It provides an **end-to-end machine learning pipeline**, making complex financial forecasting accessible through a clean and user-friendly web interface.
-
+ For full project with dataset - go to master
+ for deployable without dataset - go to main
 ---
 
 ## 💡 Usage
